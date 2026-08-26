@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codix — Website Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@700&family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    .editable-box:hover { outline: 2px dashed #6366f1; outline-offset: 2px; }
+    .selected-box { outline: 2px solid #4f46e5 !important; outline-offset: 2px; }
+    [contenteditable="true"]:focus { outline: none; }
+  </style>
+</head>
+<body class="flex h-screen bg-gray-100 overflow-hidden text-xs font-sans">
+
+  <aside class="w-72 bg-white border-r flex flex-col z-10 shadow-sm">
+    <div class="p-4 border-b flex items-center gap-2">
+      <div class="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center text-white font-black text-sm">C</div>
+      <span class="font-extrabold text-base text-gray-900 tracking-tight">Codix</span>
+    </div>
+
+    <div class="p-4 border-b text-gray-700 font-bold">Add Blocks</div>
+    <div class="p-4 flex flex-col gap-2 overflow-y-auto flex-1">
+      <button onclick="addBlock('hero')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 hover:border-indigo-200 transition">Hero Section</button>
+      <button onclick="addBlock('heading')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 hover:border-indigo-200 transition">Heading</button>
+      <button onclick="addBlock('text')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-200 transition">Paragraph Text</button>
+      <button onclick="addBlock('button')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-200 transition">Call To Action Button</button>
+      <button onclick="addBlock('image')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-200 transition">Image Block</button>
+      <button onclick="addBlock('features')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-200 transition">3-Card Grid</button>
+    </div>
+
+    <div class="p-4 border-t bg-gray-50 flex flex-col gap-2">
+      <label class="font-bold text-gray-800">Publish Settings</label>
+      <div class="flex items-center bg-white border rounded px-2">
+        <span class="text-gray-400 select-none">/sites/</span>
+        <input id="site-slug" type="text" placeholder="my-site" class="p-2 w-full outline-none bg-transparent" />
+      </div>
+      <input id="site-title" type="text" placeholder="Page Title (SEO)" class="p-2 border rounded bg-white" />
+      <button onclick="publishSite()" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm mt-1">
+        🚀 Publish to Codix
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 overflow-y-auto flex flex-col items-center">
+    <div id="status-banner" class="hidden w-full max-w-4xl mb-4 p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg shadow-sm"></div>
+    <div id="canvas" class="w-full max-w-4xl min-h-[750px] bg-white rounded-xl shadow-xl p-8 flex flex-col gap-4">
+      <p id="empty-state" class="text-gray-400 text-center py-40">Click blocks on the left sidebar to build your Codix website.</p>
+    </div>
+  </main>
+
+  <aside class="w-80 bg-white border-l flex flex-col z-10 shadow-sm">
+    <div class="p-4 border-b font-bold text-sm text-gray-800">Visual Style Inspector</div>
+    <div id="inspector-hint" class="p-4 text-gray-400">Click any element on the canvas to customize colors, typography, and layout.</div>
+
+    <div id="inspector-controls" class="hidden p-4 flex flex-col gap-4 overflow-y-auto flex-1">
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="font-semibold block mb-1">Text Color</label>
+          <input type="color" id="prop-color" class="w-full h-8 cursor-pointer border rounded" onchange="applyStyle('color', this.value)" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Background</label>
+          <input type="color" id="prop-bg" class="w-full h-8 cursor-pointer border rounded" onchange="applyStyle('backgroundColor', this.value)" />
+        </div>
+      </div>
+
+      <div>
+        <label class="font-semibold block mb-1">Font Family</label>
+        <select class="w-full p-2 border rounded" onchange="applyStyle('fontFamily', this.value)">
+          <option value="'Inter', sans-serif">Sans-Serif (Inter)</option>
+          <option value="'Poppins', sans-serif">Modern (Poppins)</option>
+          <option value="'Playfair Display', serif">Serif (Playfair)</option>
+          <option value="'Roboto Mono', monospace">Monospace</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-semibold block mb-1">Font Size & Weight</label>
+        <div class="grid grid-cols-2 gap-2">
+          <select class="p-2 border rounded" onchange="applyStyle('fontSize', this.value)">
+            <option value="0.875rem">Small</option>
+            <option value="1rem">Base</option>
+            <option value="1.5rem">Large</option>
+            <option value="2.25rem">XL Heading</option>
+            <option value="3.5rem">Giant Hero</option>
+          </select>
+          <select class="p-2 border rounded" onchange="applyStyle('fontWeight', this.value)">
+            <option value="400">Regular</option>
+            <option value="600">Semi-Bold</option>
+            <option value="800">Bold</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="font-semibold block mb-1">Padding</label>
+        <select class="w-full p-2 border rounded" onchange="applyStyle('padding', this.value)">
+          <option value="0px">None</option>
+          <option value="12px">Compact (12px)</option>
+          <option value="24px">Normal (24px)</option>
+          <option value="48px">Spacious (48px)</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="font-semibold block mb-1">Corner Radius</label>
+          <select class="w-full p-2 border rounded" onchange="applyStyle('borderRadius', this.value)">
+            <option value="0px">Square</option>
+            <option value="8px">Rounded</option>
+            <option value="16px">Curved</option>
+            <option value="9999px">Pill</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Drop Shadow</label>
+          <select class="w-full p-2 border rounded" onchange="applyStyle('boxShadow', this.value)">
+            <option value="none">None</option>
+            <option value="0 2px 4px rgba(0,0,0,0.1)">Subtle</option>
+            <option value="0 10px 15px -3px rgba(0,0,0,0.1)">Medium</option>
+            <option value="0 20px 25px -5px rgba(0,0,0,0.2)">Elevated</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="font-semibold block mb-1">Alignment</label>
+        <div class="flex gap-2">
+          <button onclick="applyStyle('textAlign', 'left')" class="flex-1 p-2 border rounded bg-gray-50">Left</button>
+          <button onclick="applyStyle('textAlign', 'center')" class="flex-1 p-2 border rounded bg-gray-50">Center</button>
+          <button onclick="applyStyle('textAlign', 'right')" class="flex-1 p-2 border rounded bg-gray-50">Right</button>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="moveElement(-1)" class="flex-1 p-2 bg-gray-100 border rounded font-semibold">Move Up ⬆</button>
+        <button onclick="moveElement(1)" class="flex-1 p-2 bg-gray-100 border rounded font-semibold">Move Down ⬇</button>
+      </div>
+
+      <button onclick="deleteSelected()" class="w-full mt-4 bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold hover:bg-red-100 transition">
+        Delete Block
+      </button>
+    </div>
+  </aside>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    let selectedElement = null;
+
+    const templates = {
+      hero: `<div class="editable-box p-12 bg-indigo-600 text-white rounded-2xl text-center flex flex-col gap-4">
+              <h1 contenteditable="true" class="text-4xl font-extrabold">Welcome to Codix</h1>
+              <p contenteditable="true" class="text-indigo-100 text-base max-w-lg mx-auto">Create and host stunning static websites instantly without code.</p>
+              <div><a href="#" contenteditable="true" class="inline-block bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg shadow">Explore More</a></div>
+            </div>`,
+      heading: `<h2 contenteditable="true" class="editable-box text-2xl font-bold text-gray-800 p-2">New Section Title</h2>`,
+      text: `<p contenteditable="true" class="editable-box text-gray-600 p-2">Click this text block to edit content directly. Customize typography and colors using the right panel.</p>`,
+      button: `<div class="p-2"><a href="#" contenteditable="true" class="editable-box inline-block bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg">Get Started</a></div>`,
+      image: `<div class="p-2"><img src="https://picsum.photos/800/400" alt="Placeholder" class="editable-box w-full h-64 object-cover rounded-lg" /></div>`,
+      features: `<div class="editable-box grid grid-cols-3 gap-4 p-4">
+                  <div class="p-4 bg-gray-50 border rounded-lg"><h3 contenteditable="true" class="font-bold text-base mb-1">Fast Hosting</h3><p contenteditable="true" class="text-gray-500">Deploys directly via Express static routing.</p></div>
+                  <div class="p-4 bg-gray-50 border rounded-lg"><h3 contenteditable="true" class="font-bold text-base mb-1">No Code</h3><p contenteditable="true" class="text-gray-500">Visual design tools directly in your browser.</p></div>
+                  <div class="p-4 bg-gray-50 border rounded-lg"><h3 contenteditable="true" class="font-bold text-base mb-1">Custom URLs</h3><p contenteditable="true" class="text-gray-500">Clean routes generated on demand.</p></div>
+                </div>`
+    };
+
+    function addBlock(type) {
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.remove();
+
+      const container = document.createElement('div');
+      container.innerHTML = templates[type];
+      const element = container.firstElementChild;
+      
+      canvas.appendChild(element);
+      attachEvents(element);
+    }
+
+    function attachEvents(el) {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectedElement) selectedElement.classList.remove('selected-box');
+        
+        selectedElement = el;
+        selectedElement.classList.add('selected-box');
+
+        document.getElementById('inspector-hint').classList.add('hidden');
+        document.getElementById('inspector-controls').classList.remove('hidden');
+      });
+    }
+
+    function applyStyle(prop, val) {
+      if (selectedElement) selectedElement.style[prop] = val;
+    }
+
+    function moveElement(direction) {
+      if (!selectedElement) return;
+      if (direction === -1 && selectedElement.previousElementSibling) {
+        canvas.insertBefore(selectedElement, selectedElement.previousElementSibling);
+      } else if (direction === 1 && selectedElement.nextElementSibling) {
+        canvas.insertBefore(selectedElement.nextElementSibling, selectedElement);
+      }
+    }
+
+    function deleteSelected() {
+      if (selectedElement) {
+        selectedElement.remove();
+        selectedElement = null;
+        document.getElementById('inspector-controls').classList.add('hidden');
+        document.getElementById('inspector-hint').classList.remove('hidden');
+      }
+    }
+
+    async function publishSite() {
+      const slug = document.getElementById('site-slug').value.trim();
+      const title = document.getElementById('site-title').value.trim();
+
+      if (!slug) {
+        alert('Please specify a site slug URL.');
+        return;
+      }
+
+      const canvasClone = canvas.cloneNode(true);
+      canvasClone.querySelectorAll('.selected-box').forEach(el => el.classList.remove('selected-box'));
+      canvasClone.querySelectorAll('.editable-box').forEach(el => el.classList.remove('editable-box'));
+      canvasClone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, pageTitle: title, htmlContent: canvasClone.innerHTML })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const banner = document.getElementById('status-banner');
+        banner.classList.remove('hidden');
+        banner.innerHTML = `🚀 Your Codix site is live! Access it here: <a href="${result.url}" target="_blank" class="font-bold underline">${result.url}</a>`;
+      }
+    }
+  </script>
+</body>
+</html>
