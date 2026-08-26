@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Codix — Advanced Web Studio</title>
+  <title>Codix Studio — Pro Web Builder</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@700&family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     .editable-box:hover { outline: 2px dashed #6366f1; outline-offset: 2px; }
     .selected-box { outline: 2px solid #4f46e5 !important; outline-offset: 2px; }
     [contenteditable="true"]:focus { outline: none; }
-    /* Device Preview Viewports */
     .view-desktop { width: 100%; max-width: 960px; }
     .view-tablet { width: 768px; }
     .view-mobile { width: 375px; }
@@ -24,11 +23,22 @@
         <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm">C</div>
         <span class="font-extrabold text-base text-gray-900 tracking-tight">Codix Studio</span>
       </div>
+      <span id="save-indicator" class="text-[10px] bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded-full">Draft Saved</span>
+    </div>
+
+    <div class="p-4 border-b bg-indigo-50/50 flex flex-col gap-2">
+      <label class="font-bold text-indigo-900">Load Starter Template</label>
+      <select id="template-select" onchange="loadTemplate(this.value)" class="p-2 border rounded-lg bg-white outline-none">
+        <option value="">Choose a Template...</option>
+        <option value="landing">SaaS Product Landing</option>
+        <option value="portfolio">Personal Portfolio</option>
+        <option value="business">Local Business Page</option>
+      </select>
     </div>
 
     <div class="p-4 border-b text-gray-700 font-bold flex justify-between items-center">
-      <span>Components</span>
-      <span class="text-[10px] text-gray-400 font-normal">Click to Add</span>
+      <span>Add Components</span>
+      <span class="text-[10px] text-gray-400 font-normal">Click to insert</span>
     </div>
     
     <div class="p-4 flex flex-col gap-2 overflow-y-auto flex-1">
@@ -38,7 +48,8 @@
       <button onclick="addBlock('features')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">3-Card Features Grid</button>
       <button onclick="addBlock('stats')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">Stats Counter</button>
       <button onclick="addBlock('pricing')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">Pricing Cards</button>
-      <button onclick="addBlock('faq')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">FAQ Section</button>
+      <button onclick="addBlock('cta')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">Call To Action Banner</button>
+      <button onclick="addBlock('faq')" class="p-2.5 bg-gray-50 border rounded-lg text-left font-semibold hover:bg-indigo-50 transition">FAQ Accordion</button>
       <button onclick="addBlock('testimonial')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 transition">Testimonial Quote</button>
       <button onclick="addBlock('footer')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 transition">Footer</button>
       <button onclick="addBlock('button')" class="p-2.5 bg-gray-50 border rounded-lg text-left hover:bg-indigo-50 transition">Standalone Button</button>
@@ -70,7 +81,8 @@
       <div class="flex gap-2">
         <button onclick="undo()" class="px-3 py-1.5 border rounded-md font-semibold bg-gray-100 hover:bg-gray-200">↩ Undo</button>
         <button onclick="redo()" class="px-3 py-1.5 border rounded-md font-semibold bg-gray-100 hover:bg-gray-200">↪ Redo</button>
-        <button onclick="toggleHTMLEditor()" class="px-3 py-1.5 border rounded-md font-semibold bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100">💻 Edit HTML</button>
+        <button onclick="toggleHTMLEditor()" class="px-3 py-1.5 border rounded-md font-semibold bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100">💻 Edit Code Mode</button>
+        <button onclick="exportHTML()" class="px-3 py-1.5 border rounded-md font-semibold bg-gray-100 hover:bg-gray-200">💾 Export HTML</button>
         <button onclick="clearCanvas()" class="px-3 py-1.5 border rounded-md font-semibold bg-red-50 text-red-600 border-red-200 hover:bg-red-100">Clear All</button>
       </div>
     </header>
@@ -79,15 +91,21 @@
       <div id="status-banner" class="hidden w-full max-w-4xl mb-4 p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg shadow-sm"></div>
       
       <div id="canvas" class="view-desktop min-h-[800px] bg-white rounded-xl shadow-xl p-8 flex flex-col gap-4 transition-all duration-300">
-        <p id="empty-state" class="text-gray-400 text-center py-40">Add components from the left sidebar to start building.</p>
+        <p id="empty-state" class="text-gray-400 text-center py-40">Select a template or add components from the left menu to start.</p>
       </div>
 
       <div id="html-editor-panel" class="hidden w-full max-w-4xl mt-4 bg-gray-900 rounded-xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden">
         <div class="p-3 bg-gray-800 text-gray-300 font-bold flex justify-between items-center border-b border-gray-700">
-          <span>HTML Source Code Editor</span>
-          <button onclick="applyHTMLChanges()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold">Apply Code to Canvas</button>
+          <div class="flex items-center gap-2">
+            <span>HTML Live Code Editor</span>
+            <span class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded">Auto-Sync Enabled</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="formatHTML()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-semibold">Format Code</button>
+            <button onclick="applyHTMLChanges()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold">Sync to Visual Canvas</button>
+          </div>
         </div>
-        <textarea id="raw-html-input" class="w-full h-80 bg-gray-900 text-green-400 font-mono p-4 text-xs outline-none resize-y" spellcheck="false"></textarea>
+        <textarea id="raw-html-input" class="w-full h-96 bg-gray-900 text-green-400 font-mono p-4 text-xs outline-none resize-y leading-relaxed" spellcheck="false" oninput="markUnsavedCode()"></textarea>
       </div>
     </div>
   </main>
@@ -110,7 +128,7 @@
       </div>
 
       <div>
-        <label class="font-semibold block mb-1">Link URL (For Buttons & Anchors)</label>
+        <label class="font-semibold block mb-1">Link URL (HREF)</label>
         <input type="text" id="prop-href" placeholder="https://..." class="w-full p-2 border rounded" oninput="applyAttribute('href', this.value)" />
       </div>
 
@@ -225,7 +243,7 @@
               </div>`,
       hero: `<div class="editable-box p-12 bg-indigo-600 text-white rounded-2xl text-center flex flex-col gap-4">
               <h1 contenteditable="true" class="text-4xl font-extrabold">Build Sites Effortlessly</h1>
-              <p contenteditable="true" class="text-indigo-100 text-base max-w-lg mx-auto">Visual block builder with instant raw HTML editing and clean hosting.</p>
+              <p contenteditable="true" class="text-indigo-100 text-base max-w-lg mx-auto">Visual block builder with instant raw HTML editing and auto-saving.</p>
               <div><a href="#" contenteditable="true" class="inline-block bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg shadow">Get Started</a></div>
             </div>`,
       heroSplit: `<div class="editable-box grid grid-cols-2 gap-8 items-center p-8 bg-gray-50 rounded-2xl">
@@ -239,7 +257,7 @@
       features: `<div class="editable-box grid grid-cols-3 gap-4 p-4">
                   <div class="p-6 bg-gray-50 border rounded-xl"><h3 contenteditable="true" class="font-bold text-lg mb-2">⚡ Express Engine</h3><p contenteditable="true" class="text-gray-500">Deploys fast using clean static endpoints.</p></div>
                   <div class="p-6 bg-gray-50 border rounded-xl"><h3 contenteditable="true" class="font-bold text-lg mb-2">💻 HTML Code Editor</h3><p contenteditable="true" class="text-gray-500">Directly modify source markup on the fly.</p></div>
-                  <div class="p-6 bg-gray-50 border rounded-xl"><h3 contenteditable="true" class="font-bold text-lg mb-2">📱 Responsive Modes</h3><p contenteditable="true" class="text-gray-500">Preview layouts across Mobile, Tablet, and Desktop.</p></div>
+                  <div class="p-6 bg-gray-50 border rounded-xl"><h3 contenteditable="true" class="font-bold text-lg mb-2">💾 Auto Local Save</h3><p contenteditable="true" class="text-gray-500">Drafts remain saved automatically in browser storage.</p></div>
                 </div>`,
       stats: `<div class="editable-box grid grid-cols-3 gap-4 p-8 bg-indigo-900 text-white rounded-2xl text-center">
                 <div><h2 contenteditable="true" class="text-4xl font-black text-indigo-400">99.9%</h2><p contenteditable="true" class="text-gray-300">Uptime Guaranteed</p></div>
@@ -260,10 +278,17 @@
                     <a href="#" contenteditable="true" class="w-full text-center bg-indigo-600 text-white font-bold py-3 rounded-lg">Upgrade Now</a>
                   </div>
                 </div>`,
+      cta: `<div class="editable-box p-10 bg-gradient-to-r from-gray-900 to-indigo-950 text-white rounded-2xl flex justify-between items-center">
+              <div>
+                <h2 contenteditable="true" class="text-2xl font-bold mb-1">Ready to start building?</h2>
+                <p contenteditable="true" class="text-gray-400">Create custom websites without complicated setups.</p>
+              </div>
+              <a href="#" contenteditable="true" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition">Get Started Free</a>
+            </div>`,
       faq: `<div class="editable-box p-8 bg-gray-50 rounded-2xl flex flex-col gap-4">
               <h2 contenteditable="true" class="text-2xl font-bold mb-2">Frequently Asked Questions</h2>
-              <div class="p-4 bg-white border rounded-lg"><h4 contenteditable="true" class="font-bold text-base">How are sites hosted?</h4><p contenteditable="true" class="text-gray-500 mt-1">Sites are saved locally to Express static storage and served via custom URLs.</p></div>
-              <div class="p-4 bg-white border rounded-lg"><h4 contenteditable="true" class="font-bold text-base">Can I edit raw HTML?</h4><p contenteditable="true" class="text-gray-500 mt-1">Yes, click the Edit HTML button in the top toolbar to modify source markup directly.</p></div>
+              <div class="p-4 bg-white border rounded-lg"><h4 contenteditable="true" class="font-bold text-base">How are draft changes saved?</h4><p contenteditable="true" class="text-gray-500 mt-1">Changes save automatically to localStorage so you never lose work on refresh.</p></div>
+              <div class="p-4 bg-white border rounded-lg"><h4 contenteditable="true" class="font-bold text-base">Can I export code locally?</h4><p contenteditable="true" class="text-gray-500 mt-1">Yes, click Export HTML to download a complete, standalone .html file.</p></div>
             </div>`,
       testimonial: `<div class="editable-box p-8 bg-indigo-50 border border-indigo-100 rounded-2xl text-center">
                       <p contenteditable="true" class="text-indigo-900 italic text-base mb-4">"Codix combined the speed of visual editing with raw HTML flexibility seamlessly."</p>
@@ -284,6 +309,21 @@
       historyStep++;
       historyStack = historyStack.slice(0, historyStep);
       historyStack.push(canvas.innerHTML);
+      localStorage.setItem('codix_draft', canvas.innerHTML);
+      
+      const indicator = document.getElementById('save-indicator');
+      if (indicator) {
+        indicator.textContent = 'Draft Saved';
+        indicator.className = 'text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full';
+      }
+    }
+
+    function loadSavedDraft() {
+      const saved = localStorage.getItem('codix_draft');
+      if (saved && saved.trim() !== '') {
+        canvas.innerHTML = saved;
+        rebindCanvasEvents();
+      }
     }
 
     function undo() {
@@ -315,6 +355,18 @@
       saveState();
     }
 
+    function loadTemplate(type) {
+      if (!type) return;
+      canvas.innerHTML = '';
+      if (type === 'landing') {
+        addBlock('navbar'); addBlock('hero'); addBlock('features'); addBlock('pricing'); addBlock('footer');
+      } else if (type === 'portfolio') {
+        addBlock('navbar'); addBlock('heroSplit'); addBlock('stats'); addBlock('testimonial'); addBlock('footer');
+      } else if (type === 'business') {
+        addBlock('navbar'); addBlock('hero'); addBlock('features'); addBlock('faq'); addBlock('cta'); addBlock('footer');
+      }
+    }
+
     function attachEvents(el) {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -330,6 +382,8 @@
           document.getElementById('prop-href').value = el.getAttribute('href') || '';
         }
       });
+
+      el.addEventListener('input', () => saveState());
     }
 
     function rebindCanvasEvents() {
@@ -372,8 +426,9 @@
     }
 
     function clearCanvas() {
-      if (confirm('Are you sure you want to clear the canvas?')) {
-        canvas.innerHTML = '<p id="empty-state" class="text-gray-400 text-center py-40">Add components from the left sidebar to start building.</p>';
+      if (confirm('Clear entire canvas?')) {
+        canvas.innerHTML = '<p id="empty-state" class="text-gray-400 text-center py-40">Select a template or add components from the left menu to start.</p>';
+        localStorage.removeItem('codix_draft');
         saveState();
       }
     }
@@ -394,12 +449,52 @@
       }
     }
 
+    function markUnsavedCode() {
+      const indicator = document.getElementById('save-indicator');
+      if (indicator) {
+        indicator.textContent = 'Unsynced Code';
+        indicator.className = 'text-[10px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full';
+      }
+    }
+
+    function formatHTML() {
+      const textarea = document.getElementById('raw-html-input');
+      let code = textarea.value.replace(/></g, '>\n<');
+      textarea.value = code;
+    }
+
     function applyHTMLChanges() {
       const textarea = document.getElementById('raw-html-input');
       canvas.innerHTML = textarea.value;
       rebindCanvasEvents();
       saveState();
-      toggleHTMLEditor();
+    }
+
+    function exportHTML() {
+      const canvasClone = canvas.cloneNode(true);
+      canvasClone.querySelectorAll('.selected-box').forEach(el => el.classList.remove('selected-box'));
+      canvasClone.querySelectorAll('.editable-box').forEach(el => el.classList.remove('editable-box'));
+      canvasClone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+      const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exported Site</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-white min-h-screen text-gray-900">
+  ${canvasClone.innerHTML}
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'index.html';
+      a.click();
     }
 
     async function publishSite() {
@@ -423,11 +518,12 @@
       if (result.success) {
         const banner = document.getElementById('status-banner');
         banner.classList.remove('hidden');
-        banner.innerHTML = `🚀 Your Codix site is live! View it here: <a href="${result.url}" target="_blank" class="font-bold underline">${result.url}</a>`;
+        banner.innerHTML = `🚀 Your site is live: <a href="${result.url}" target="_blank" class="font-bold underline">${result.url}</a>`;
       }
     }
 
-    // Save initial state
+    // Restore draft state on page load
+    loadSavedDraft();
     saveState();
   </script>
 </body>
